@@ -1,15 +1,13 @@
-module.exports = function solveSudoku(matrix) {
+module.exports = function solveSudoku(sudoku) {
+  const matrix = cloneSudoku(sudoku);
   const EXEMPLAR = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-
-  let prevZeroCounter;
   let zeroCounter = 0;
 
-  while (zeroCounter !== prevZeroCounter) {
-    prevZeroCounter = zeroCounter;
-    zeroCounter = 0;
+  do {
+    const prevZeroCounter = zeroCounter;
 
-    for (let y = 0; y < 9; ++y) {
-      for (let x = 0; x < 9; ++x) {
+    for (let y = 0; y < matrix.length; ++y) {
+      for (let x = 0; x < matrix[y].length; ++x) {
         if (matrix[y][x] === 1 || matrix[y][x] > 1) continue;
 
         if (matrix[y][x] === 0) {
@@ -17,14 +15,50 @@ module.exports = function solveSudoku(matrix) {
           matrix[y][x] = new Set(EXEMPLAR);
         }
 
-        const overweight = collectOverweight(matrix, y, x);
-        getRidOf(matrix[y][x], overweight);
+        ////////////////////// ПРОСТРО ПРОВЕРКА. УДАЛЮ
+        if (matrix[y][x] === undefined) {
+          return null;
+        }
 
         if (matrix[y][x].size === 1) {
           [matrix[y][x]] = [...matrix[y][x]];
           --zeroCounter;
+          break;
+        }
+
+        const overweight = collectOverweight(matrix, y, x);
+        getRidOf(matrix[y][x], overweight);
+
+        if (zeroCounter === prevZeroCounter) {
+          const storage = matrix[y][x];
+          matrix[y][x] = [...storage].pop();
+
+          if (solveSudoku(matrix)) {
+            --zeroCounter;
+          } else {
+            storage.delete(matrix[y][x]);
+            if (storage.size === 0) return null;
+            matrix[y][x] = storage;
+          }
         }
       }
+    }
+
+  } while (zeroCounter > 0);
+
+  return matrix;
+}
+
+function cloneSudoku(sudoku) {
+  const matrix = [];
+
+  for (let y = 0; y < sudoku.length; ++y) {
+    matrix[y] = []
+
+    for (let x = 0; x < sudoku[y].length; ++x) {
+      if (typeof sudoku[y][x] === 'object') {
+        matrix[y][x] = new Set([...sudoku[y][x]]);
+      } else matrix[y][x] = sudoku[y][x];
     }
   }
 
@@ -34,7 +68,7 @@ module.exports = function solveSudoku(matrix) {
 function collectOverweight(matrix, y, x) {
   const overweight = [];
 
-  for (let i = 0; i < 9; ++i) {
+  for (let i = 0; i < matrix.length; ++i) {
     overweight.push(matrix[y][i]);
     overweight.push(matrix[i][x]);
 
