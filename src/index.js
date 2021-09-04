@@ -42,7 +42,9 @@ module.exports = function solveSudoku(sudoku) {
       const storage = matrix[y][x];
       matrix[y][x] = [...storage].pop();
 
-      if (!solveSudoku(matrix)) {
+      const draft = solveSudoku(matrix);
+
+      if (!check(draft)) {
         storage.delete(matrix[y][x]);
         matrix[y][x] = storage;
       }
@@ -89,4 +91,16 @@ function collectOverweight(matrix, y, x) {
 
 function getRidOf(sequence, overweight) {
   overweight.forEach(value => sequence.delete(value));
+}
+
+
+function check(draft) {
+  if (!draft) return false;
+
+  for (let i = 0; i < draft.length; ++i) {
+    if (( new Set(draft[i]) ).size !== 9) return false;
+    if (( new Set(draft.map(row => row[i])) ).size !== 9) return false;
+  }
+
+  return true;
 }
