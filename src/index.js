@@ -16,6 +16,8 @@ module.exports = function solveSudoku(sudoku) {
           continue;
         }
 
+        if (matrix[y][x] === undefined) return null;
+
         // further only unknown numbers are welcome
 
         if (matrix[y][x] === 0) {
@@ -40,6 +42,9 @@ module.exports = function solveSudoku(sudoku) {
     if (knownNumberCounter === prevCycleCounter) {
       const [y, x] = guessCandidateCoords;
       const storage = matrix[y][x];
+
+      if (typeof storage !== 'object') continue;
+
       matrix[y][x] = [...storage].pop();
 
       const draft = solveSudoku(matrix);
