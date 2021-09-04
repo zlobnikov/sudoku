@@ -1,53 +1,58 @@
 module.exports = function solveSudoku(sudoku) {
   const matrix = cloneSudoku(sudoku);
   const EXEMPLAR = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-  let zeroCounter = 0;
 
-  do {
-    const prevZeroCounter = zeroCounter;
+  let knownNumberCounter = 0;
+  let prevCycleCounter;
+  let guessCandidateCoords;
+
+  while (knownNumberCounter < 81) {
+    knownNumberCounter = 0;
 
     for (let y = 0; y < matrix.length; ++y) {
       for (let x = 0; x < matrix[y].length; ++x) {
-        if (matrix[y][x] === 1 || matrix[y][x] > 1) continue;
+        if (matrix[y][x] === 1 || matrix[y][x] > 1) {
+          ++knownNumberCounter;
+          continue;
+        }
+
+        // further only unknown numbers are welcome
 
         if (matrix[y][x] === 0) {
-          ++zeroCounter;
           matrix[y][x] = new Set(EXEMPLAR);
         }
 
-        ////////////////////// ПРОСТРО ПРОВЕРКА. УДАЛЮ
-        if (matrix[y][x] === undefined) {
-          return null;
-        }
+        if (matrix[y][x].size === 0) return null;
+        else if (matrix[y][x].size === 1) {
 
-        if (matrix[y][x].size === 1) {
           [matrix[y][x]] = [...matrix[y][x]];
-          --zeroCounter;
+          ++knownNumberCounter;
           break;
         }
 
         const overweight = collectOverweight(matrix, y, x);
         getRidOf(matrix[y][x], overweight);
 
-        if (zeroCounter === prevZeroCounter) {
-          const storage = matrix[y][x];
-          matrix[y][x] = [...storage].pop();
-
-          if (solveSudoku(matrix)) {
-            --zeroCounter;
-          } else {
-            storage.delete(matrix[y][x]);
-            if (storage.size === 0) return null;
-            matrix[y][x] = storage;
-          }
-        }
+        guessCandidateCoords = [y, x];
       }
     }
 
-  } while (zeroCounter > 0);
+    if (knownNumberCounter === prevCycleCounter) {
+      const [y, x] = guessCandidateCoords;
+      const storage = matrix[y][x];
+      matrix[y][x] = [...storage].pop();
+
+      if (!solveSudoku(matrix)) {
+        storage.delete(matrix[y][x]);
+        matrix[y][x] = storage;
+      }
+
+    } else prevCycleCounter = knownNumberCounter;
+  }
 
   return matrix;
 }
+
 
 function cloneSudoku(sudoku) {
   const matrix = [];
@@ -65,6 +70,7 @@ function cloneSudoku(sudoku) {
   return matrix;
 }
 
+
 function collectOverweight(matrix, y, x) {
   const overweight = [];
 
@@ -79,6 +85,7 @@ function collectOverweight(matrix, y, x) {
 
   return overweight;
 }
+
 
 function getRidOf(sequence, overweight) {
   overweight.forEach(value => sequence.delete(value));
