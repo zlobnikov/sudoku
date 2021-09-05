@@ -1,5 +1,7 @@
-module.exports = function solveSudoku(sudoku) {
-  const matrix = cloneSudoku(sudoku);
+module.exports = function solveSudoku(sudoku, validation = false) {
+  const matrix = cloneSudoku(sudoku, validation);
+  if (!matrix) return null;
+
   const EXEMPLAR = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
   let knownNumberCounter = 0;
@@ -15,17 +17,12 @@ module.exports = function solveSudoku(sudoku) {
           continue;
         }
 
-        if (matrix[y][x] === undefined) return null;
-
-        // further only unknown numbers are welcome
-
         if (matrix[y][x] === 0) {
           matrix[y][x] = new Set(EXEMPLAR);
         }
 
         if (matrix[y][x].size === 0) return null;
         else if (matrix[y][x].size === 1) {
-
           [matrix[y][x]] = [...matrix[y][x]];
           ++knownNumberCounter;
           continue;
@@ -40,7 +37,7 @@ module.exports = function solveSudoku(sudoku) {
       const storage = matrix[y][x];
 
       matrix[y][x] = [...storage].pop();
-      const draft = solveSudoku(matrix);
+      const draft = solveSudoku(matrix, true);
 
       if (!check(draft)) {
         storage.delete(matrix[y][x]);
@@ -55,7 +52,9 @@ module.exports = function solveSudoku(sudoku) {
 }
 
 
-function cloneSudoku(sudoku) {
+function cloneSudoku(sudoku, validation) {
+  if (validation && !check(sudoku)) return null;
+
   const matrix = [];
 
   for (let y = 0; y < sudoku.length; ++y) {
@@ -71,6 +70,7 @@ function cloneSudoku(sudoku) {
   return matrix;
 }
 
+
 function dropExtraNumbers(matrix, y, x) {
   for (let i = 0; i < matrix.length; ++i) {
     matrix[y][x].delete(matrix[y][i]);
@@ -82,6 +82,7 @@ function dropExtraNumbers(matrix, y, x) {
   }
 }
 
+
 function getCandidateCoords(matrix) {
   for (let y = 0; y < matrix.length; ++y) {
     for (let x = 0; x < matrix[y].length; ++x) {
@@ -91,6 +92,7 @@ function getCandidateCoords(matrix) {
     }
   }
 }
+
 
 function check(draft) {
   if (!draft) return false;
