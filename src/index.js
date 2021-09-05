@@ -15,7 +15,7 @@ module.exports = function solveSudoku(sudoku) {
           continue;
         }
 
-        if (matrix[y][x] === undefined) return null;  // TEMPORARY PATCH
+        if (matrix[y][x] === undefined) return null;
 
         // further only unknown numbers are welcome
 
@@ -31,31 +31,20 @@ module.exports = function solveSudoku(sudoku) {
           continue;
         }
 
-        const overweight = collectOverweight(matrix, y, x);
-        getRidOf(matrix[y][x], overweight);
+        dropExtraNumbers(matrix, y, x);
       }
     }
 
     if (knownNumberCounter === prevCycleCounter) {
-      const coords = getCandidateCoords(matrix);
-
-      if (coords === null) {
-        if (check(matrix)) {
-          return matrix;
-        } else {
-          return null;
-        };
-      }; // for incoming incorrect matrix
-      const [y, x] = coords;
+      const [y, x] = getCandidateCoords(matrix);
       const storage = matrix[y][x];
 
       matrix[y][x] = [...storage].pop();
-
       const draft = solveSudoku(matrix);
 
       if (!check(draft)) {
         storage.delete(matrix[y][x]);
-        if (storage.size === 0) return null; /////////////////////
+        if (storage.size === 0) return null;
         matrix[y][x] = storage;
       }
 
@@ -82,23 +71,15 @@ function cloneSudoku(sudoku) {
   return matrix;
 }
 
-function collectOverweight(matrix, y, x) {
-  const overweight = [];
-
+function dropExtraNumbers(matrix, y, x) {
   for (let i = 0; i < matrix.length; ++i) {
-    overweight.push(matrix[y][i]);
-    overweight.push(matrix[i][x]);
+    matrix[y][x].delete(matrix[y][i]);
+    matrix[y][x].delete(matrix[i][x]);
 
     const sectorY = Math.floor(y / 3) * 3 + Math.floor(i / 3);
     const sectorX = Math.floor(x / 3) * 3 + i % 3;
-    overweight.push(matrix[sectorY][sectorX]);
+    matrix[y][x].delete(matrix[sectorY][sectorX]);
   }
-
-  return overweight;
-}
-
-function getRidOf(sequence, overweight) {
-  overweight.forEach(value => sequence.delete(value));
 }
 
 function getCandidateCoords(matrix) {
@@ -109,8 +90,6 @@ function getCandidateCoords(matrix) {
       }
     }
   }
-
-  return null;
 }
 
 function check(draft) {
