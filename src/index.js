@@ -28,7 +28,7 @@ module.exports = function solveSudoku(sudoku) {
 
           [matrix[y][x]] = [...matrix[y][x]];
           ++knownNumberCounter;
-          break;
+          continue;
         }
 
         const overweight = collectOverweight(matrix, y, x);
